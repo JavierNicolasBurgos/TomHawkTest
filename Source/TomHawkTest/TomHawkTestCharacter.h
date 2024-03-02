@@ -48,6 +48,14 @@ class ATomHawkTestCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/** It is used so that forward movement is not so fast and to generate a weight. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Test, meta = (AllowPrivateAccess = "true"))
+	float ForwardAccelerationValue = 0.01f;
+
+	/** It is used for each time we turn we have a speed. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Test, meta = (AllowPrivateAccess = "true"))
+	float TurnRightVelocity = 0.01f;
+		
 public:
 	
 	ATomHawkTestCharacter();
@@ -74,7 +82,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	UFUNCTION(BlueprintPure, Category = "Test")
+	UFUNCTION(BlueprintPure, Category = Test)
 	FORCEINLINE UStaticMeshComponent* GetSkateboardStaticMesh() const { return SkateboardStaticMesh; }
 };
 

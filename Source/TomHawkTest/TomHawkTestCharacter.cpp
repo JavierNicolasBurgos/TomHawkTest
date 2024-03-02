@@ -101,21 +101,14 @@ void ATomHawkTestCharacter::Move(const FInputActionValue& Value)
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
+	// For this example we do not take into account the backward movement.
+	if (MovementVector.Y >= 0 && Controller != nullptr)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
+		ForwardAccelerationValue = FMath::Lerp(ForwardAccelerationValue, MovementVector.Y, 0.01f);
+		
 		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+		AddMovementInput(SkateboardStaticMesh->GetForwardVector(), ForwardAccelerationValue);
+		AddMovementInput(SkateboardStaticMesh->GetRightVector(), MovementVector.X * TurnRightVelocity);
 	}
 }
 
@@ -126,7 +119,7 @@ void ATomHawkTestCharacter::Look(const FInputActionValue& Value)
 
 	if (Controller != nullptr)
 	{
-		// add yaw and pitch input to controller
+		// using to the character move in the skateboard direction
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
