@@ -20,6 +20,10 @@ class ATomHawkTestCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+	/** The skate using the character to ride. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* SkateboardStaticMesh;
+	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -45,9 +49,9 @@ class ATomHawkTestCharacter : public ACharacter
 	UInputAction* LookAction;
 
 public:
+	
 	ATomHawkTestCharacter();
 	
-
 protected:
 
 	/** Called for movement input */
@@ -66,8 +70,11 @@ protected:
 
 public:
 	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	UFUNCTION(BlueprintPure, Category = "Test")
+	FORCEINLINE UStaticMeshComponent* GetSkateboardStaticMesh() const { return SkateboardStaticMesh; }
 };
 
