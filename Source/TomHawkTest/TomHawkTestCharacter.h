@@ -55,6 +55,10 @@ class ATomHawkTestCharacter : public ACharacter
 	/** It is used for each time we turn we have a speed. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Test, meta = (AllowPrivateAccess = "true"))
 	float TurnRightVelocity = 0.01f;
+
+	/** It is used to know the length of the trace that we are going to throw from the board to the floor. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Test, meta = (AllowPrivateAccess = "true"))
+	FVector SkateboardTraceOffset;
 		
 public:
 	
@@ -75,6 +79,8 @@ protected:
 	
 	// To add mapping context
 	virtual void BeginPlay();
+
+	virtual void Tick(float DeltaSeconds) override;
 
 public:
 	/** Returns CameraBoom subobject **/

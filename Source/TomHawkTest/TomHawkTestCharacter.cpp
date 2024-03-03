@@ -10,6 +10,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Animation/AnimInstanceProxy.h"
+#include "Helpers/TomHawkTestHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -72,6 +76,52 @@ void ATomHawkTestCharacter::BeginPlay()
 	}
 }
 
+void ATomHawkTestCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	FVector LineTraceStart = SkateboardStaticMesh->GetSocketLocation(UTomHawkTestHelpers::GetSkateboardForwardSocketName());
+	FVector LineTraceEnd = LineTraceStart + FVector(0.0, 0.0, -30.0);
+	LineTraceStart += FVector(0.0f, 0.0f, +30.0f);
+	
+	FHitResult ForwardSocketHitResult;
+	TArray<AActor*> ActorToIgnore;
+	ActorToIgnore.Emplace(this);
+	ActorToIgnore.Emplace(SkateboardStaticMesh->GetStaticMesh());
+	ActorToIgnore.Emplace(GetCapsuleComponent()->ShapeBodySetup);
+	bool bLineTraceSingle = UKismetSystemLibrary::LineTraceSingle(this, LineTraceStart, LineTraceEnd, ETraceTypeQuery::TraceTypeQuery1, false, ActorToIgnore, EDrawDebugTrace::ForOneFrame, ForwardSocketHitResult, true);
+	DrawDebugLine(GetWorld(), LineTraceStart, LineTraceEnd, FColor::White, false, 0.0f, -1, 1.0f);
+	FVector ForwardSkateboardVector;
+	if (bLineTraceSingle)
+	{
+		ForwardSkateboardVector = ForwardSocketHitResult.Location;
+	}
+	else
+	{
+		ForwardSkateboardVector = LineTraceStart;
+	}
+	
+	FVector LineTraceStart2 = SkateboardStaticMesh->GetSocketLocation(UTomHawkTestHelpers::GetSkateboardBackwardSocketName());
+	FVector LineTraceEnd2 = LineTraceStart2 + FVector(0.0, 0.0, -30.0);
+	LineTraceStart2 += FVector(0.0f, 0.0f, +30.0f);
+	
+	FHitResult BackwardSocketHitResult;
+	bool bLineTraceSingle2 = UKismetSystemLibrary::LineTraceSingle(this, LineTraceStart2, LineTraceEnd2, ETraceTypeQuery::TraceTypeQuery1, false, ActorToIgnore, EDrawDebugTrace::ForOneFrame, BackwardSocketHitResult, true);
+	DrawDebugLine(GetWorld(), LineTraceStart2, LineTraceEnd2, FColor::Blue, false, 0.0f, -1, 1.0f);
+	FVector BackwardSkateboardVector;
+	if (bLineTraceSingle2)
+	{
+		BackwardSkateboardVector = BackwardSocketHitResult.Location;
+	}
+	else
+	{
+		BackwardSkateboardVector = LineTraceStart2;
+	}
+
+	const FRotator NewSkateboardRotation = UKismetMathLibrary::FindLookAtRotation(BackwardSkateboardVector, ForwardSkateboardVector);
+	SkateboardStaticMesh->SetWorldRotation(NewSkateboardRotation);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -100,7 +150,7 @@ void ATomHawkTestCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
+	
 	// For this example we do not take into account the backward movement.
 	if (MovementVector.Y >= 0 && Controller != nullptr)
 	{
