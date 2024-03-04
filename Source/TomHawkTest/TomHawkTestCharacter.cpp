@@ -80,46 +80,41 @@ void ATomHawkTestCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	FVector LineTraceStart = SkateboardStaticMesh->GetSocketLocation(UTomHawkTestHelpers::GetSkateboardForwardSocketName());
-	FVector LineTraceEnd = LineTraceStart + FVector(0.0, 0.0, -30.0);
-	LineTraceStart += FVector(0.0f, 0.0f, +30.0f);
-	
-	FHitResult ForwardSocketHitResult;
+	const FVector ForwardSocketLocation = SkateboardStaticMesh->GetSocketLocation(UTomHawkTestHelpers::GetSkateboardForwardSocketName());
+	const FVector SkateboardForwardHitLocation = MakeSkateboardLineTrace(ForwardSocketLocation + SkateboardTraceOffset, ForwardSocketLocation - SkateboardTraceOffset);
+
+	const FVector BackwardSocketLocation = SkateboardStaticMesh->GetSocketLocation(UTomHawkTestHelpers::GetSkateboardBackwardSocketName());
+	const FVector SkateboardBackwardHitLocation = MakeSkateboardLineTrace(BackwardSocketLocation + SkateboardTraceOffset, BackwardSocketLocation - SkateboardTraceOffset);
+
+	RotateSkateboard(SkateboardBackwardHitLocation, SkateboardForwardHitLocation, DeltaSeconds);
+}
+
+FVector ATomHawkTestCharacter::MakeSkateboardLineTrace(FVector StartTraceLocation, FVector EndTraceLocation) const
+{
+	FHitResult HitResult;
+
 	TArray<AActor*> ActorToIgnore;
-	ActorToIgnore.Emplace(this);
-	ActorToIgnore.Emplace(SkateboardStaticMesh->GetStaticMesh());
-	ActorToIgnore.Emplace(GetCapsuleComponent()->ShapeBodySetup);
-	bool bLineTraceSingle = UKismetSystemLibrary::LineTraceSingle(this, LineTraceStart, LineTraceEnd, ETraceTypeQuery::TraceTypeQuery1, false, ActorToIgnore, EDrawDebugTrace::ForOneFrame, ForwardSocketHitResult, true);
-	DrawDebugLine(GetWorld(), LineTraceStart, LineTraceEnd, FColor::White, false, 0.0f, -1, 1.0f);
-	FVector ForwardSkateboardVector;
+	bool bLineTraceSingle =	UKismetSystemLibrary::LineTraceSingle(this, StartTraceLocation, EndTraceLocation, ETraceTypeQuery::TraceTypeQuery1, false, ActorToIgnore, EDrawDebugTrace::ForOneFrame, HitResult, true);
+	DrawDebugLine(GetWorld(), StartTraceLocation, EndTraceLocation, FColor::White, false, 0.0f, -1, 1.0f);
+
+	FVector SkateboardHitLocation;
 	if (bLineTraceSingle)
 	{
-		ForwardSkateboardVector = ForwardSocketHitResult.Location;
+		SkateboardHitLocation = HitResult.Location;
 	}
 	else
 	{
-		ForwardSkateboardVector = LineTraceStart;
-	}
-	
-	FVector LineTraceStart2 = SkateboardStaticMesh->GetSocketLocation(UTomHawkTestHelpers::GetSkateboardBackwardSocketName());
-	FVector LineTraceEnd2 = LineTraceStart2 + FVector(0.0, 0.0, -30.0);
-	LineTraceStart2 += FVector(0.0f, 0.0f, +30.0f);
-	
-	FHitResult BackwardSocketHitResult;
-	bool bLineTraceSingle2 = UKismetSystemLibrary::LineTraceSingle(this, LineTraceStart2, LineTraceEnd2, ETraceTypeQuery::TraceTypeQuery1, false, ActorToIgnore, EDrawDebugTrace::ForOneFrame, BackwardSocketHitResult, true);
-	DrawDebugLine(GetWorld(), LineTraceStart2, LineTraceEnd2, FColor::Blue, false, 0.0f, -1, 1.0f);
-	FVector BackwardSkateboardVector;
-	if (bLineTraceSingle2)
-	{
-		BackwardSkateboardVector = BackwardSocketHitResult.Location;
-	}
-	else
-	{
-		BackwardSkateboardVector = LineTraceStart2;
+		SkateboardHitLocation = StartTraceLocation;
 	}
 
-	const FRotator NewSkateboardRotation = UKismetMathLibrary::FindLookAtRotation(BackwardSkateboardVector, ForwardSkateboardVector);
-	SkateboardStaticMesh->SetWorldRotation(NewSkateboardRotation);
+	return SkateboardHitLocation;
+}
+
+void ATomHawkTestCharacter::RotateSkateboard(const FVector& StartLocation, const FVector& TargetLocation, float DeltaTime) const
+{
+	const FRotator NewSkateboardRotation = UKismetMathLibrary::FindLookAtRotation(StartLocation, TargetLocation);
+	const FRotator NewSkateboardSmoothRotation = FMath::RInterpTo(SkateboardStaticMesh->GetComponentRotation(), NewSkateboardRotation, DeltaTime, RotateSkateboardVelocity);
+	GetCapsuleComponent()->SetWorldRotation(NewSkateboardSmoothRotation);
 }
 
 //////////////////////////////////////////////////////////////////////////

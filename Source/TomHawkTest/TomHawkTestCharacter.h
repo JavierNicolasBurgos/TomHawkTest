@@ -59,7 +59,11 @@ class ATomHawkTestCharacter : public ACharacter
 	/** It is used to know the length of the trace that we are going to throw from the board to the floor. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Test, meta = (AllowPrivateAccess = "true"))
 	FVector SkateboardTraceOffset;
-		
+
+	/** It is the velocity to rotate the skateboard. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Test, meta = (AllowPrivateAccess = "true"))
+	float RotateSkateboardVelocity = 20.0f;
+
 public:
 	
 	ATomHawkTestCharacter();
@@ -81,6 +85,10 @@ protected:
 	virtual void BeginPlay();
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	FVector MakeSkateboardLineTrace(FVector StartTraceLocation, FVector EndTraceLocation) const;
+
+	void RotateSkateboard(const FVector& StartLocation, const FVector& TargetLocation, float DeltaTime) const;
 
 public:
 	/** Returns CameraBoom subobject **/
